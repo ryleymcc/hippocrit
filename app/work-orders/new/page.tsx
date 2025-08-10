@@ -1,6 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
+interface Template {
+  id: number;
+  name: string;
+  fields: {
+    siteId?: number;
+    title?: string;
+    descriptionMd?: string;
+    assetId?: number;
+    priority?: 'P0' | 'P1' | 'P2' | 'P3' | 'P4';
+  };
+}
 
 export default function CreateWorkOrderPage() {
   const [siteId, setSiteId] = useState('1');
@@ -9,6 +21,25 @@ export default function CreateWorkOrderPage() {
   const [priority, setPriority] = useState('P3');
   const [assetId, setAssetId] = useState('');
   const [saving, setSaving] = useState(false);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [templateId, setTemplateId] = useState(0);
+
+  useEffect(() => {
+    fetch('/api/work-order-templates')
+      .then((res) => res.json())
+      .then((data) => setTemplates(data));
+  }, []);
+
+  useEffect(() => {
+    const tmpl = templates.find((t) => t.id === templateId);
+    if (tmpl) {
+      setSiteId(tmpl.fields.siteId ? String(tmpl.fields.siteId) : '1');
+      setTitle(tmpl.fields.title ?? '');
+      setDesc(tmpl.fields.descriptionMd ?? '');
+      setPriority(tmpl.fields.priority ?? 'P3');
+      setAssetId(tmpl.fields.assetId ? String(tmpl.fields.assetId) : '');
+    }
+  }, [templateId, templates]);
 
   async function save() {
     setSaving(true);
@@ -38,6 +69,19 @@ export default function CreateWorkOrderPage() {
   return (
     <div className="max-w-md mx-auto p-4 space-y-3">
       <h1 className="text-xl font-semibold">Create Work Order</h1>
+      {templates.length > 0 && (
+        <select
+          className="w-full border rounded p-2"
+          value={templateId}
+          onChange={(e) => setTemplateId(Number(e.target.value))}
+        >
+          {templates.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.name}
+            </option>
+          ))}
+        </select>
+      )}
       <input
         className="w-full border rounded p-2"
         placeholder="Site ID"
