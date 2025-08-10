@@ -7,7 +7,7 @@ const schema = z.object({
   siteId: z.number(),
   title: z.string().min(3),
   descriptionMd: z.string().optional(),
-  assetId: z.number().optional(),
+  assetId: z.number().int().positive().optional(),
   priority: z.enum(['P0', 'P1', 'P2', 'P3', 'P4']).default('P3'),
 });
 
@@ -43,6 +43,13 @@ export async function POST(req: NextRequest) {
   const site = await prisma.site.findUnique({ where: { id: data.siteId } });
   if (!site) {
     return NextResponse.json({ error: 'Site not found' }, { status: 404 });
+  }
+
+  if (data.assetId) {
+    const asset = await prisma.asset.findUnique({ where: { id: data.assetId } });
+    if (!asset) {
+      return NextResponse.json({ error: 'Asset not found' }, { status: 404 });
+    }
   }
 
   const year = new Date().getFullYear();
