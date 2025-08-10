@@ -1,12 +1,13 @@
 import { getModule } from "../modules";
 import { notFound } from "next/navigation";
 
-export default function ModulePage({
+export default async function ModulePage({
   params,
 }: {
-  params: { module: string };
+  params: Promise<{ module: string }>;
 }) {
-  const mod = getModule(params.module);
+  const { module } = await params;
+  const mod = getModule(module);
   if (!mod) notFound();
   return (
     <div className="p-8 space-y-2">
