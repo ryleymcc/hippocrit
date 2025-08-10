@@ -11,6 +11,18 @@ const schema = z.object({
   priority: z.enum(['P0', 'P1', 'P2', 'P3', 'P4']).default('P3'),
 });
 
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const siteId = searchParams.get('siteId');
+  const where = siteId ? { siteId: Number(siteId) } : undefined;
+  const workOrders = await prisma.workOrder.findMany({
+    where,
+    orderBy: { id: 'desc' },
+    take: 100,
+  });
+  return NextResponse.json(workOrders);
+}
+
 export async function POST(req: NextRequest) {
   let body: unknown;
   try {
