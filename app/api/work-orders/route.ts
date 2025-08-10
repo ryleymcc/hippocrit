@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Site not found' }, { status: 404 });
   }
 
-  if (data.assetId) {
+  if (data.assetId !== undefined) {
     const asset = await prisma.asset.findUnique({ where: { id: data.assetId } });
     if (!asset) {
       return NextResponse.json({ error: 'Asset not found' }, { status: 404 });
@@ -66,17 +66,19 @@ export async function POST(req: NextRequest) {
           descriptionMd: data.descriptionMd ?? '',
           priority: data.priority,
           status: 'new',
-          assetId: data.assetId,
+          ...(data.assetId !== undefined ? { assetId: data.assetId } : {}),
         },
       });
       return NextResponse.json(wo, { status: 201 });
     } catch (err) {
-      if (
-        err instanceof Prisma.PrismaClientKnownRequestError &&
-        err.code === 'P2002'
-      ) {
-        attempt += 1;
-        continue;
+      if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        if (err.code === 'P2002') {
+          attempt += 1;
+          continue;
+        }
+        if (err.code === 'P2003') {
+          return NextResponse.json({ error: 'Related record not found' }, { status: 404 });
+        }
       }
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

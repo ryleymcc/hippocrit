@@ -1,1 +1,3 @@
-export { default } from '../../work-orders/page';
+import WorkOrdersPage from '../../work-orders/page';
+
+export default WorkOrdersPage;
