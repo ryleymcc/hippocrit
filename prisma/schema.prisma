@@ -1,0 +1,77 @@
+// Prisma schema for Hippocrit CMMS
+// Defines core tables for sites, locations, assets, and work orders
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Site {
+  id         Int         @id @default(autoincrement())
+  name       String
+  code       String
+  locations  Location[]
+  assets     Asset[]
+  workOrders WorkOrder[]
+}
+
+model Location {
+  id         Int         @id @default(autoincrement())
+  siteId     Int
+  site       Site        @relation(fields: [siteId], references: [id])
+  path       String
+  type       String
+  parentId   Int?
+  parent     Location?   @relation("LocationParent", fields: [parentId], references: [id])
+  children   Location[]  @relation("LocationParent")
+  assets     Asset[]
+  workOrders WorkOrder[]
+}
+
+model Asset {
+  id             Int         @id @default(autoincrement())
+  siteId         Int
+  site           Site        @relation(fields: [siteId], references: [id])
+  locationId     Int?
+  location       Location?   @relation(fields: [locationId], references: [id])
+  parentId       Int?
+  parent         Asset?      @relation("AssetParent", fields: [parentId], references: [id])
+  children       Asset[]     @relation("AssetParent")
+  tag            String?
+  name           String
+  model          String?
+  serial         String?
+  manufacturer   String?
+  commissionedAt DateTime?
+  status         String?     @default("active")
+  criticality    Int?
+  qrCode         String?
+  workOrders     WorkOrder[]
+}
+
+model WorkOrder {
+  id              Int        @id @default(autoincrement())
+  siteId          Int
+  site            Site       @relation(fields: [siteId], references: [id])
+  number          String
+  title           String
+  descriptionMd   String
+  assetId         Int?
+  asset           Asset?     @relation(fields: [assetId], references: [id])
+  locationId      Int?
+  location        Location?  @relation(fields: [locationId], references: [id])
+  priority        String     @default("P3")
+  status          String     @default("new")
+  requestedBy     String?
+  assignedTo      String?
+  requestedAt     DateTime?  @default(now())
+  dueAt           DateTime?
+  completedAt     DateTime?
+  costLabor       Float?
+  costParts       Float?
+  downtimeMinutes Int?
+}
